@@ -1,0 +1,6 @@
+asyncio
+bleak
+fastapi
+pillow
+python-multipart
+uvicorn
