@@ -67,12 +67,15 @@ async def bleTurnon():
         return
     await send(Common().turn_screen_on())
     
-async def blesendgif(file):
+async def blesendgif(file, process=True):
     global currentPixels
     if not checkBLEconnected() :
         return
     #await asyncio.sleep(2)
-    await send(Gif().upload_processed(file,currentPixels))
+    if process:
+        await send(Gif().upload_processed(file,currentPixels))
+    else:
+        await send(Gif().upload_unprocessed(file,currentPixels))
     
 
 @app.get("/BLEconnect/{address}/{pixels}")
@@ -158,6 +161,36 @@ async def use_local_file(BackgroundTasks: BackgroundTasks, filename: str):
     SAVE_F = os.path.join(UPLOAD_DIR, filename)
     if os.path.isfile(SAVE_F):
         BackgroundTasks.add_task(blesendgif, SAVE_F)
+        return "Success"
+    else:
+
+        return "File not found"
+
+@app.post('/raw-upload')
+async def upload_file(request: Request, BackgroundTasks: BackgroundTasks, file: UploadFile = File(...)):
+    print(file.filename)
+    if file.content_type  != 'image/gif' and file.content_type  != 'image/png':
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Wow, That's not allowed")
+        return
+    
+    print("uploaded {} successful".format(file.filename))
+    
+    SAVE_F = os.path.join(UPLOAD_DIR, file.filename)
+    
+    with open(SAVE_F, 'w+b') as diskfile:
+        shutil.copyfileobj(file.file, diskfile)
+        
+    print(SAVE_F)
+    
+    BackgroundTasks.add_task(blesendgif, SAVE_F, False)
+    
+    return "Success"
+
+@app.get('/raw-uselocal/{filename}')
+async def use_local_file(BackgroundTasks: BackgroundTasks, filename: str):
+    SAVE_F = os.path.join(UPLOAD_DIR, filename)
+    if os.path.isfile(SAVE_F):
+        BackgroundTasks.add_task(blesendgif, SAVE_F, False)
         return "Success"
     else:
 
