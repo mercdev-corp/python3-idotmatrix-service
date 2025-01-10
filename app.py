@@ -75,7 +75,7 @@ async def blesendgif(file, process=True):
     if process:
         await send(Gif().upload_processed(file,currentPixels))
     else:
-        await send(Gif().upload_unprocessed(file,currentPixels))
+        await send(Gif().upload_unprocessed(file))
     
 
 @app.get("/BLEconnect/{address}/{pixels}")
