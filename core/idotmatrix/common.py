@@ -7,6 +7,21 @@ class Common:
     Based on the BleProtocolN.java file of the iDotMatrix Android App.
     """
 
+    def reset(self) -> bytearray:
+        """Sends soft reset command to clear device runtime graphics state.
+
+        Returns:
+            byte array of the command which needs to be sent to the device
+        """
+        return bytearray(
+            [
+                4,
+                0,
+                3,
+                128,
+            ]
+        )
+
     def toggle_screen_freeze(self) -> bytearray:
         """Freezes or unfreezes the screen.
 

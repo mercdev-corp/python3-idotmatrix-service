@@ -61,7 +61,7 @@ class Image:
             png_data (bytearray): data of the png file
 
         Returns:
-            bytearray: returns bytearray payload
+            list: returns list of chunk payloads
         """
         # Split the PNG data into 4096-byte chunks
         png_chunks = self.split_into_chunks(png_data, 4096)
@@ -70,7 +70,7 @@ class Image:
         idk_bytes = struct.pack("h", idk)  # convert to 16bit signed int
         png_len_bytes = struct.pack("i", len(png_data))
         # build data
-        payloads = bytearray()
+        chunks = []
         for i, chunk in enumerate(png_chunks):
             payload = (
                 idk_bytes
@@ -84,8 +84,8 @@ class Image:
                 + png_len_bytes
                 + chunk
             )
-            payloads.extend(payload)
-        return payloads
+            chunks.append(payload)
+        return chunks
 
     def upload_unprocessed(self, file_path):
         """uploads an image without further checks and resizes.
@@ -94,24 +94,29 @@ class Image:
             file_path (str): path to the image file
 
         Returns:
-            bytearray: returns bytearray payload
+            list: returns list of chunk payloads
         """
         png_data = self.load_png(file_path)
         return self.create_payloads(png_data)
 
-    def upload_processed(self, file_path, pixel_size=32):
+    def upload_processed(self, file_path=None, pixel_size=32, file=None):
         """uploads a file processed and makes sure everything is correct.
 
         Args:
-            file_path (str): path to the image file
+            file_path (str, optional): path to the image file
             pixel_size (int, optional): amount of pixels (either 16 or 32 makes sense). Defaults to 32.
+            file (str, optional): alias for file_path for compatibility.
 
         Returns:
-            bytearray: returns bytearray payload
+            list: returns list of chunk payloads
         """
+        target_file = file_path or file
+        if not target_file:
+            self.logging.error("No file provided for upload_processed")
+            return []
         try:
             # Open the image file
-            with PilImage.open(file_path) as img:
+            with PilImage.open(target_file) as img:
                 # Resize the image
                 if img.size != (pixel_size, pixel_size):
                     img = img.resize(
@@ -125,6 +130,6 @@ class Image:
                 png_buffer.seek(0)
                 # Return the PNG data
                 return self.create_payloads(png_buffer.getvalue())
-        except IOError as e:
+        except Exception as e:
             self.logging.error("could not process image: {}".format(e))
-            quit()
+            return []
