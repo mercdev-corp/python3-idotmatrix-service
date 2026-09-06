@@ -35,11 +35,11 @@ async def bleconnect():
         await ble.connect()
     except Exception as e:
         print("ble device not found")
-    
+
 async def bledisconnect():
     global ble
     await ble.disconnect()
-    
+
 async def send(message):
     global ble
     # check if connected
@@ -48,25 +48,25 @@ async def send(message):
         return False
     await ble.write_gatt_char(
         UUID_WRITE_DATA,
-        message,
+        message
     )
     return True
-    
+
 async def bleSetBrightness(brightness: int):
     if not checkBLEconnected() :
         return
     await send(Common().set_screen_brightness(brightness))
-    
+
 async def bleTurnoff():
     if not checkBLEconnected() :
         return
     await send(Common().turn_screen_off())
-    
+
 async def bleTurnon():
     if not checkBLEconnected() :
         return
     await send(Common().turn_screen_on())
-    
+
 async def blesendgif(file, process=True):
     global currentPixels
     if not checkBLEconnected() :
@@ -76,7 +76,7 @@ async def blesendgif(file, process=True):
         await send(Gif().upload_processed(file,currentPixels))
     else:
         await send(Gif().upload_unprocessed(file))
-    
+
 
 @app.get("/BLEconnect/{address}/{pixels}")
 async def BLEconnect(address: str, pixels: int, BackgroundTasks: BackgroundTasks):
@@ -88,7 +88,7 @@ async def BLEconnect(address: str, pixels: int, BackgroundTasks: BackgroundTasks
             BackgroundTasks.add_task(bledisconnect)
         currentAdress = address
         currentPixels = pixels
-    
+
     if not checkBLEconnected() :
         BackgroundTasks.add_task(bleconnect)
         return "Success"
@@ -100,7 +100,7 @@ async def BLEdisconnect(BackgroundTasks: BackgroundTasks):
         BackgroundTasks.add_task(bledisconnect)
         return "Success"
     return "Not connected"
-    
+
 @app.get("/BLEstatus")
 def BLEstatus():
     if not checkBLEconnected():
@@ -142,18 +142,18 @@ async def upload_file(request: Request, BackgroundTasks: BackgroundTasks, file: 
     if file.content_type  != 'image/gif' and file.content_type  != 'image/png':
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Wow, That's not allowed")
         return
-    
+
     print("uploaded {} successful".format(file.filename))
-    
+
     SAVE_F = os.path.join(UPLOAD_DIR, file.filename)
-    
+
     with open(SAVE_F, 'w+b') as diskfile:
         shutil.copyfileobj(file.file, diskfile)
-        
+
     print(SAVE_F)
-    
+
     BackgroundTasks.add_task(blesendgif, SAVE_F)
-    
+
     return "Success"
 
 @app.get('/uselocal/{filename}')
@@ -172,18 +172,18 @@ async def upload_file(request: Request, BackgroundTasks: BackgroundTasks, file: 
     if file.content_type  != 'image/gif' and file.content_type  != 'image/png':
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Wow, That's not allowed")
         return
-    
+
     print("uploaded {} successful".format(file.filename))
-    
+
     SAVE_F = os.path.join(UPLOAD_DIR, file.filename)
-    
+
     with open(SAVE_F, 'w+b') as diskfile:
         shutil.copyfileobj(file.file, diskfile)
-        
+
     print(SAVE_F)
-    
+
     BackgroundTasks.add_task(blesendgif, SAVE_F, False)
-    
+
     return "Success"
 
 @app.get('/raw-uselocal/{filename}')
