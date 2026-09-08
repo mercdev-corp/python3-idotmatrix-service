@@ -26,6 +26,7 @@ cp .env.example .env   # On Windows PowerShell: Copy-Item .env.example .env
 | `ADDRESS` | Bluetooth MAC address without colons (case-insensitive) | `123456789abc` |
 | `PIXELS` | Matrix display resolution (width/height in pixels) | `32` (or `16`) |
 | `DEFAULT_IMAGE` | Name of the file in `uploads/` to show automatically on connect/reset | `default_image.gif` |
+| `DEFAULT_TURN_OFF` | Turn screen LEDs off after startup procedure completes | `false` (or `true`) |
 
 `.env` is automatically loaded by `app.py` on startup if present.
 
@@ -41,7 +42,7 @@ cp .env.example .env   # On Windows PowerShell: Copy-Item .env.example .env
    * **Windows**: Check Bluetooth settings or use a BLE scanner (look for names starting with `IDM-`).
 
 3. **Configure `.env`**:
-   Set `ADDRESS`, `PIXELS`, and optionally `DEFAULT_IMAGE` in `.env`.
+   Set `ADDRESS`, `PIXELS`, and optionally `DEFAULT_IMAGE` or `DEFAULT_TURN_OFF` in `.env`.
 
 4. **Start the service**:
    * Directly with Python:
@@ -59,7 +60,7 @@ cp .env.example .env   # On Windows PowerShell: Copy-Item .env.example .env
 ## API Endpoints
 
 ### Connection & Device Management
-* `GET /BLEconnect/{address}/{pixels}` — Connects to the display. E.g. `/BLEconnect/d2317868b878/32`. Upon connection, sends a soft reset and automatically displays `DEFAULT_IMAGE` if configured.
+* `GET /BLEconnect/{address}/{pixels}` — Connects to the display. E.g. `/BLEconnect/d2317868b878/32`. Upon connection, sends a soft reset, automatically displays `DEFAULT_IMAGE` if configured, and turns off screen if `DEFAULT_TURN_OFF` is enabled.
 * `GET /BLEdisconnect` — Disconnects from the display.
 * `GET /BLEstatus` — Returns connection status `{"connected": true/false}`.
 * `GET /reset` — Sends a runtime soft reset (`04 00 03 80`) to clear device graphics buffers and re-applies `DEFAULT_IMAGE`.

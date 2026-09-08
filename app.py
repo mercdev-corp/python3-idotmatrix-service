@@ -83,6 +83,10 @@ async def bleconnect():
             print("Display runtime state reset")
             await asyncio.sleep(0.5)
             await send_default_image()
+            if is_default_turn_off_enabled():
+                await asyncio.sleep(0.5)
+                print("Applying DEFAULT_TURN_OFF: turning screen off")
+                await bleTurnoff()
         except Exception as e:
             print(f"Could not subscribe to BLE notifications: {e}")
     except Exception as e:
@@ -183,6 +187,13 @@ async def blesendgif(file, process=True):
 
     if payload:
         await send(payload)
+
+def is_default_turn_off_enabled() -> bool:
+    val = os.getenv("DEFAULT_TURN_OFF")
+    if val is None:
+        return False
+    val = val.strip().lower()
+    return val not in ("", "0", "false", "no", "off")
 
 async def send_default_image():
     default_image = os.getenv("DEFAULT_IMAGE")
